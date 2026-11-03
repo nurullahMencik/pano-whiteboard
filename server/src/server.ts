@@ -32,6 +32,14 @@ export const createPanoServer = (config: ServerConfig, persistence: Persistence,
 
   const clientIp = (req: IncomingMessage): string => {
     if (config.trustProxy) {
+      // Render, Cloudflare'in arkasında çalışır: CF-Connecting-IP / True-Client-IP Cloudflare
+      // tarafından yazılır ve istemci değiştiremez. X-Forwarded-For'un ilk değerini ise istemci
+      // kendisi gönderebilir, bu yüzden yalnız son çare olarak kullanılır.
+      for (const name of ['cf-connecting-ip', 'true-client-ip']) {
+        const value = req.headers[name]
+        const ip = (Array.isArray(value) ? value[0] : value)?.trim()
+        if (ip) return ip
+      }
       const forwarded = req.headers['x-forwarded-for']
       const first = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(',')[0]?.trim()
       if (first) return first
