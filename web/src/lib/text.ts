@@ -99,7 +99,7 @@ export const layoutElementText = (el: ElementData, measure: Measure = measureTex
   }
   const pad = el.type === 'sticky' ? STICKY_PADDING : LABEL_PADDING
   // Ellipses and diamonds have less usable room than their frame.
-  const inset = el.type === 'ellipse' ? 0.7 : el.type === 'diamond' ? 0.5 : 1
+  const inset = el.type === 'ellipse' ? 0.72 : el.type === 'diamond' ? 0.6 : 1
   const maxWidth = Math.max(8, el.w * inset - pad * 2)
   const maxHeight = Math.max(8, el.h * inset - pad * 2)
   let fontSize = base

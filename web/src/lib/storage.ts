@@ -28,8 +28,13 @@ const RECENT_KEY = 'pano:recent'
 const RECENT_LIMIT = 9
 
 export const loadRecent = (): RecentBoard[] => {
-  const list = readJson<RecentBoard[]>(RECENT_KEY, [])
-  return Array.isArray(list) ? list.filter((b) => typeof b.id === 'string' && (b.kind === 'r' || b.kind === 'v')) : []
+  const list = readJson<unknown>(RECENT_KEY, [])
+  if (!Array.isArray(list)) return []
+  return list.filter((entry): entry is RecentBoard => {
+    if (typeof entry !== 'object' || entry === null) return false
+    const board = entry as Record<string, unknown>
+    return typeof board.id === 'string' && (board.kind === 'r' || board.kind === 'v') && typeof board.openedAt === 'number'
+  })
 }
 
 export const touchRecent = (entry: Omit<RecentBoard, 'openedAt'> & { openedAt?: number }) => {

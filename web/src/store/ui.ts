@@ -80,14 +80,14 @@ export interface UiState {
   toast: { id: number; message: string } | null
   editingText: boolean
 
-  setLang(lang: Lang): void
-  setTheme(theme: ThemePref): void
-  setResolvedTheme(theme: 'light' | 'dark'): void
-  setTool(tool: Tool): void
-  setStyle(patch: Partial<ToolStyle>): void
-  setDialog(dialog: Dialog): void
-  showToast(message: string): void
-  patch(state: Partial<UiState>): void
+  setLang: (lang: Lang) => void
+  setTheme: (theme: ThemePref) => void
+  setResolvedTheme: (theme: 'light' | 'dark') => void
+  setTool: (tool: Tool) => void
+  setStyle: (patch: Partial<ToolStyle>) => void
+  setDialog: (dialog: Dialog) => void
+  showToast: (message: string) => void
+  patch: (state: Partial<UiState>) => void
 }
 
 const prefs = initialPrefs()

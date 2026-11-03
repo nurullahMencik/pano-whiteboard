@@ -11,7 +11,7 @@ export type Translate = (key: TranslationKey, params?: Record<string, string | n
 export const createTranslator =
   (lang: Lang): Translate =>
   (key, params) => {
-    const template = dictionaries[lang][key] ?? tr[key] ?? key
+    const template = dictionaries[lang][key]
     if (!params) return template
     return template.replace(/\{(\w+)\}/g, (match, name: string) => (name in params ? String(params[name]) : match))
   }

@@ -20,6 +20,8 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
       '@typescript-eslint/no-confusing-void-expression': ['error', { ignoreArrowShorthand: true }],
+      // Y.Text implements toString(); the rule cannot see it through the JSDoc typings.
+      '@typescript-eslint/no-base-to-string': ['error', { ignoredTypeNames: ['Error', 'RegExp', 'URL', 'URLSearchParams', 'Text', 'YText'] }],
     },
   },
   {

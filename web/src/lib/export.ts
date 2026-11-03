@@ -1,6 +1,6 @@
 import { THEME, resolveColor, type ThemeName } from './colors'
 import { boxCenter, commonBounds, frameOf, localPoints, pointsBounds } from './geometry'
-import { arrowHeadPoints, drawElement, freedrawSize, shapeRadius } from './render'
+import { arrowHeadPoints, drawElement, freedrawSize, labelColor, shapeRadius } from './render'
 import { freedrawPath } from './stroke'
 import { FONT_FAMILY, layoutElementText, type Measure, measureText } from './text'
 import type { Box, ElementData } from './types'
@@ -53,17 +53,17 @@ export const elementToSvg = (el: ElementData, options: ExportOptions): string =>
   switch (el.type) {
     case 'rect': {
       const fill = el.fill === 'none' ? 'none' : resolveColor(el.fill, theme)
-      body = `<rect width="${n(w)}" height="${n(h)}" rx="${n(shapeRadius(el))}" fill="${fill}" ${strokeAttrs(el, theme)}/>` + textSvg(el, ink, measure)
+      body = `<rect width="${n(w)}" height="${n(h)}" rx="${n(shapeRadius(el))}" fill="${fill}" ${strokeAttrs(el, theme)}/>` + textSvg(el, labelColor(el, theme), measure)
       break
     }
     case 'ellipse': {
       const fill = el.fill === 'none' ? 'none' : resolveColor(el.fill, theme)
-      body = `<ellipse cx="${n(w / 2)}" cy="${n(h / 2)}" rx="${n(w / 2)}" ry="${n(h / 2)}" fill="${fill}" ${strokeAttrs(el, theme)}/>` + textSvg(el, ink, measure)
+      body = `<ellipse cx="${n(w / 2)}" cy="${n(h / 2)}" rx="${n(w / 2)}" ry="${n(h / 2)}" fill="${fill}" ${strokeAttrs(el, theme)}/>` + textSvg(el, labelColor(el, theme), measure)
       break
     }
     case 'diamond': {
       const fill = el.fill === 'none' ? 'none' : resolveColor(el.fill, theme)
-      body = `<path d="M${n(w / 2)} 0L${n(w)} ${n(h / 2)}L${n(w / 2)} ${n(h)}L0 ${n(h / 2)}Z" fill="${fill}" ${strokeAttrs(el, theme)}/>` + textSvg(el, ink, measure)
+      body = `<path d="M${n(w / 2)} 0L${n(w)} ${n(h / 2)}L${n(w / 2)} ${n(h)}L0 ${n(h / 2)}Z" fill="${fill}" ${strokeAttrs(el, theme)}/>` + textSvg(el, labelColor(el, theme), measure)
       break
     }
     case 'line':

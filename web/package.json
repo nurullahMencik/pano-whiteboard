@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --port 5311 --strictPort",
     "build": "tsc -b && vite build",
+    "build:e2e": "tsc -b && VITE_WS_URL=ws://localhost:5312 vite build",
     "preview": "vite preview --port 5311 --strictPort",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc -b --noEmit",

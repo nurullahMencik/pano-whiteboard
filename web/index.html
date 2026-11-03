@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Pano: gerçek zamanlı ortak çalışma tahtası. Yjs CRDT ile çakışmasız eşzamanlama, çevrimdışı çalışma, canlı imleçler ve paylaşım linkleri." />
+    <meta name="theme-color" content="#f7f6f2" />
+    <meta property="og:title" content="Pano · Gerçek zamanlı ortak çalışma tahtası" />
+    <meta property="og:description" content="Linki paylaş, ekip aynı tahtada canlı çizsin. CRDT ile çakışmasız, çevrimdışı çalışır." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Pano · Gerçek zamanlı ortak çalışma tahtası</title>
+    <script>
+      // Apply the stored theme before first paint to avoid a light flash.
+      try {
+        var prefs = JSON.parse(localStorage.getItem('pano:prefs') || '{}')
+        var q = new URLSearchParams(location.search).get('theme')
+        var theme = q || prefs.theme || 'system'
+        if (theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark')
+        }
+        if (prefs.lang === 'en' || new URLSearchParams(location.search).get('lang') === 'en') document.documentElement.lang = 'en'
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>Pano'yu kullanmak için JavaScript gerekir.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

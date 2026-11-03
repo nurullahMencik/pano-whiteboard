@@ -1,4 +1,4 @@
-import { THEME, resolveColor, type ThemeName } from './colors'
+import { THEME, contrastText, resolveColor, type ThemeName } from './colors'
 import { boxCenter, frameOf, localPoints, pointsBounds } from './geometry'
 import { freedrawPath } from './stroke'
 import { FONT_FAMILY, layoutElementText } from './text'
@@ -16,6 +16,10 @@ export interface RenderOptions {
 }
 
 const pathCache = new Map<string, { key: string; path: Path2D }>()
+
+/** Shape labels stay readable: dark on pastel fills, theme ink on transparent shapes. */
+export const labelColor = (el: ElementData, theme: ThemeName) =>
+  el.fill !== 'none' ? contrastText(resolveColor(el.fill, theme)) : THEME[theme].ink
 
 export const freedrawSize = (strokeWidth: number) => strokeWidth * 1.75
 
@@ -114,7 +118,7 @@ export const drawElement = (ctx: CanvasRenderingContext2D, el: ElementData, opti
         applyStroke(ctx, el, theme)
         ctx.stroke()
       }
-      if (showText) drawText(ctx, el, ink)
+      if (showText) drawText(ctx, el, labelColor(el, theme))
       break
     }
     case 'line':

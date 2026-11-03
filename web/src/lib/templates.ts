@@ -55,7 +55,7 @@ const flow = (t: Translate): SeedContent => {
 }
 
 const brainstorm = (t: Translate): SeedContent => {
-  const elements: ElementInput[] = [textElement(-140, -380, t('tpl.brainstorm.title'), 40)]
+  const elements: ElementInput[] = [textElement(-480, -470, t('tpl.brainstorm.title'), 40)]
   elements.push(shapeElement('ellipse', -140, -80, 280, 160, { text: t('tpl.brainstorm.center'), fill: '#e5dbff', stroke: '#7048e8', fontSize: 26 }))
   const count = 6
   for (let i = 0; i < count; i++) {

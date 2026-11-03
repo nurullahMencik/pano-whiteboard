@@ -71,7 +71,7 @@ export const buildDemo = (t: Translate): SeedContent => {
 
   elements.push(stickyElement(784, 44, t('demo.action1'), '#a5d8ff', 145, { rotation: -0.015 }))
   elements.push(stickyElement(941, 60, t('demo.action2'), '#d0bfff', 145, { rotation: 0.02 }))
-  elements.push(freedrawElement(sketchCheck(890, 22, 44, 31), { stroke: '#2f9e44', strokeWidth: 4 }))
+  elements.push(freedrawElement(sketchCheck(1046, -30, 40, 31), { stroke: '#2f9e44', strokeWidth: 4 }))
 
   // Release flow
   const fx = 1230
@@ -87,7 +87,7 @@ export const buildDemo = (t: Translate): SeedContent => {
   elements.push(lineElement('arrow', { x: fx + 276, y: 340 }, { x: fx + 322, y: 340 }))
   elements.push(lineElement('arrow', { x: fx + 410, y: 292 }, { x: fx + 258, y: 186 }, { strokeStyle: 'dashed', stroke: '#e03e3e' }))
   elements.push(textElement(fx + 166, 424, t('demo.yes'), 16, { stroke: '#2f9e44' }))
-  elements.push(textElement(fx + 278, 310, t('demo.no'), 16, { stroke: '#e03e3e' }))
+  elements.push(textElement(fx + 280, 304, t('demo.no'), 16, { stroke: '#e03e3e' }))
   elements.push(freedrawElement(sketchStar(fx + 300, 512, 26, 41), { stroke: '#e8590c', strokeWidth: 3 }))
   elements.push(textElement(fx + 336, 494, t('demo.ship'), 24, { stroke: '#e8590c', rotation: -0.06 }))
 

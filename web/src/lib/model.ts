@@ -61,7 +61,7 @@ export const applyTextDiff = (ytext: Y.Text, next: string) => {
 const num = (value: unknown, fallback = 0) => (typeof value === 'number' && Number.isFinite(value) ? value : fallback)
 
 /** Converts an element Y.Map into a plain snapshot. */
-export const readElement = (id: string, ymap: YElement, version = 0): ElementData => {
+export const readElement = (id: string, ymap: YElement, version = 0, reusePoints?: number[]): ElementData => {
   const points = ymap.get('points')
   const text = ymap.get('text')
   const type = ymap.get('type') as ElementData['type']
@@ -81,7 +81,7 @@ export const readElement = (id: string, ymap: YElement, version = 0): ElementDat
     opacity: num(ymap.get('opacity'), 1),
     version,
   }
-  if (points instanceof Y.Array) el.points = points.toArray() as number[]
+  if (points instanceof Y.Array) el.points = reusePoints ?? (points.toArray() as number[])
   if (text instanceof Y.Text) el.text = text.toString()
   for (const key of ['pw', 'ph', 'fontSize'] as const) {
     const value = ymap.get(key)

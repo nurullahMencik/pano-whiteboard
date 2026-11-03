@@ -8,12 +8,48 @@ export const NONE = 'none'
 
 export type ThemeName = 'light' | 'dark'
 
-export const STROKE_COLORS = [INK, '#e03e3e', '#e8590c', '#d9a400', '#2f9e44', '#1c7ed6', '#7048e8', '#c2255c'] as const
+export type ColorName = 'ink' | 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'violet' | 'pink' | 'gray' | 'peach' | 'none'
 
-export const FILL_COLORS = [NONE, '#ffe3e3', '#ffe8cc', '#fff3bf', '#d3f9d8', '#d0ebff', '#e5dbff', '#f1f3f5'] as const
+export interface Swatch {
+  value: string
+  name: ColorName
+  light?: boolean
+}
+
+export const STROKE_SWATCHES: Swatch[] = [
+  { value: INK, name: 'ink' },
+  { value: '#e03e3e', name: 'red' },
+  { value: '#e8590c', name: 'orange' },
+  { value: '#d9a400', name: 'yellow' },
+  { value: '#2f9e44', name: 'green' },
+  { value: '#1c7ed6', name: 'blue' },
+  { value: '#7048e8', name: 'violet' },
+  { value: '#c2255c', name: 'pink' },
+]
+
+export const FILL_SWATCHES: Swatch[] = [
+  { value: NONE, name: 'none' },
+  { value: '#ffe3e3', name: 'red', light: true },
+  { value: '#ffe8cc', name: 'orange', light: true },
+  { value: '#fff3bf', name: 'yellow', light: true },
+  { value: '#d3f9d8', name: 'green', light: true },
+  { value: '#d0ebff', name: 'blue', light: true },
+  { value: '#e5dbff', name: 'violet', light: true },
+  { value: '#f1f3f5', name: 'gray', light: true },
+]
 
 /** Sticky note palette (paper-like, readable with dark text in both themes). */
-export const STICKY_COLORS = ['#ffe066', '#ffc9a9', '#ffb3c7', '#b2f2bb', '#a5d8ff', '#d0bfff', '#e9ecef'] as const
+export const STICKY_SWATCHES: Swatch[] = [
+  { value: '#ffe066', name: 'yellow' },
+  { value: '#ffc9a9', name: 'peach' },
+  { value: '#ffb3c7', name: 'pink' },
+  { value: '#b2f2bb', name: 'green' },
+  { value: '#a5d8ff', name: 'blue' },
+  { value: '#d0bfff', name: 'violet' },
+  { value: '#e9ecef', name: 'gray' },
+]
+
+export const STICKY_COLORS = STICKY_SWATCHES.map((s) => s.value)
 
 /** Presence colours: saturated, distinct, readable with white text. */
 export const USER_COLORS = ['#e8590c', '#1c7ed6', '#2f9e44', '#c2255c', '#7048e8', '#0c8599', '#d9480f', '#5c940d'] as const
