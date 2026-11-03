@@ -4,7 +4,7 @@ import { createTranslator } from '../src/i18n'
 import { en } from '../src/i18n/en'
 import { tr } from '../src/i18n/tr'
 import { buildDemo } from '../src/lib/demo'
-import { boardToSvg } from '../src/lib/export'
+import { boardToSvg, isSafeImageUrl } from '../src/lib/export'
 import { createRoomId, ROOM_ID_PATTERN, VIEW_ID_PATTERN, viewIdFor } from '../src/lib/ids'
 import { BoardModel, SEED_ORIGIN } from '../src/lib/model'
 import { TEMPLATE_IDS, buildTemplate } from '../src/lib/templates'
@@ -94,6 +94,14 @@ describe('text layout and SVG export', () => {
     expect(layout).not.toBeNull()
     expect(layout?.fontSize).toBeLessThan(22)
     expect((layout?.lines.length ?? 0) * (layout?.lineHeight ?? 0)).toBeLessThanOrEqual(120 - 36 + 1)
+  })
+
+  it('only renders inline image data URLs coming from peers', () => {
+    expect(isSafeImageUrl('data:image/webp;base64,AAAA')).toBe(true)
+    expect(isSafeImageUrl('data:image/svg+xml;charset=utf-8,%3Csvg')).toBe(true)
+    expect(isSafeImageUrl('javascript:alert(1)')).toBe(false)
+    expect(isSafeImageUrl('https://evil.example/track.png')).toBe(false)
+    expect(isSafeImageUrl('data:text/html,<script>')).toBe(false)
   })
 
   it('exports the demo board as a standalone SVG', () => {

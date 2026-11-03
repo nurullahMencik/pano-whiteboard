@@ -140,6 +140,7 @@ export class BoardEngine {
   private autoFitTimer: ReturnType<typeof setTimeout> | null = null
   private autoFitStop: ReturnType<typeof setTimeout> | null = null
   private lastCursorSent = 0
+  private cursorTimer: ReturnType<typeof setTimeout> | null = null
   private viewportTimer: ReturnType<typeof setTimeout> | null = null
   private hoverWorld: Vec | null = null
   private clipboard: ClipboardData | null = null
@@ -282,14 +283,14 @@ export class BoardEngine {
     return screenToWorld(this.camera, p)
   }
 
-  private readInto(id: string, ymap: YElement, changedKeys?: Set<string>) {
+  private readInto(id: string, ymap: YElement, changedKeys?: Set<string>, patchSorted = true) {
     const prev = this.elements.get(id)
     const reuse = prev && changedKeys && !changedKeys.has('points') ? prev.points : undefined
     const el = readElement(id, ymap, ++this.versionSeq, reuse)
     this.elements.set(id, el)
     this.bounds.set(id, elementBounds(el))
-    if (!prev || prev.z !== el.z) this.sortDirty = true
-    else {
+    if (!prev || prev.z !== el.z || !patchSorted) this.sortDirty = true
+    else if (!this.sortDirty) {
       // Keep the sorted array in sync without a full re-sort.
       const index = this.sorted.indexOf(prev)
       if (index >= 0) this.sorted[index] = el
@@ -339,7 +340,8 @@ export class BoardEngine {
         if (this.editingId === id) this.editor?.commit()
         continue
       }
-      this.readInto(id, ymap, keys)
+      // Patching the sorted list in place is O(n) per element; for bulk changes a re-sort is cheaper.
+      this.readInto(id, ymap, keys, changed.size <= 16)
       if (this.selection.has(id)) selectedTouched = true
     }
     if (selectionChanged) this.emitSelection()
@@ -395,15 +397,21 @@ export class BoardEngine {
     this.requestFrame()
   }
 
+  /** Cursor presence at most every 40 ms, always ending with the final resting position. */
   private sendCursor(world: Vec | null) {
+    if (this.cursorTimer) clearTimeout(this.cursorTimer)
+    this.cursorTimer = null
     if (world === null) {
       this.session.setPresence({ cursor: null })
       return
     }
-    const now = performance.now()
-    if (now - this.lastCursorSent < 40) return
-    this.lastCursorSent = now
-    this.session.setPresence({ cursor: { x: round(world.x, 2), y: round(world.y, 2) } })
+    const send = () => {
+      this.lastCursorSent = performance.now()
+      this.session.setPresence({ cursor: { x: round(world.x, 2), y: round(world.y, 2) } })
+    }
+    const wait = 40 - (performance.now() - this.lastCursorSent)
+    if (wait <= 0) send()
+    else this.cursorTimer = setTimeout(send, wait)
   }
 
   private publishViewport() {
@@ -1756,6 +1764,7 @@ export class BoardEngine {
     if (this.rafId) cancelAnimationFrame(this.rafId)
     if (this.autoFitTimer) clearTimeout(this.autoFitTimer)
     if (this.autoFitStop) clearTimeout(this.autoFitStop)
+    if (this.cursorTimer) clearTimeout(this.cursorTimer)
     if (this.viewportTimer) clearTimeout(this.viewportTimer)
     for (const cleanup of this.cleanups.splice(0)) cleanup()
     this.cursors.destroy()

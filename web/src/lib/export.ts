@@ -14,6 +14,9 @@ export interface ExportOptions {
   measure?: Measure
 }
 
+/** Assets come from peers: only inline raster/SVG data URLs are ever rendered. */
+export const isSafeImageUrl = (url: string) => /^data:image\/(png|jpeg|webp|gif|svg\+xml)[;,]/.test(url)
+
 const escapeXml = (value: string) =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
@@ -106,7 +109,8 @@ export const elementToSvg = (el: ElementData, options: ExportOptions): string =>
       break
     }
     case 'image': {
-      const href = el.asset ? options.assets(el.asset) : undefined
+      const asset = el.asset ? options.assets(el.asset) : undefined
+      const href = asset && isSafeImageUrl(asset) ? asset : undefined
       body = href
         ? `<image href="${escapeXml(href)}" width="${n(w)}" height="${n(h)}" preserveAspectRatio="none"/>`
         : `<rect width="${n(w)}" height="${n(h)}" rx="6" fill="#e9e8e3"/>`
@@ -144,7 +148,7 @@ export const loadImages = async (elements: ElementData[], assets: (id: string) =
       .map(async (el) => {
         const id = el.asset as string
         const src = assets(id)
-        if (!src || images.has(id)) return
+        if (!src || !isSafeImageUrl(src) || images.has(id)) return
         const img = new Image()
         img.src = src
         try {

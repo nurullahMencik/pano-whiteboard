@@ -49,11 +49,18 @@ export const tempDbPath = (): { path: string; cleanup: () => void } => {
   return { path: join(dir, 'pano.db'), cleanup: () => rmSync(dir, { recursive: true, force: true }) }
 }
 
-export const connect = (roomName: string, doc = new Y.Doc()): WebsocketProvider =>
-  new WebsocketProvider(WS_URL, roomName, doc, {
-    WebSocketPolyfill: WebSocket as unknown as typeof globalThis.WebSocket,
+/** y-websocket provider over Node's `ws`; `ip` is sent as X-Forwarded-For (for TRUST_PROXY tests). */
+export const connect = (roomName: string, doc = new Y.Doc(), ip?: string): WebsocketProvider => {
+  class ForwardedWebSocket extends WebSocket {
+    constructor(url: string, protocols?: string | string[]) {
+      super(url, protocols, ip ? { headers: { 'x-forwarded-for': ip } } : {})
+    }
+  }
+  return new WebsocketProvider(WS_URL, roomName, doc, {
+    WebSocketPolyfill: (ip ? ForwardedWebSocket : WebSocket) as unknown as typeof globalThis.WebSocket,
     disableBc: true,
   })
+}
 
 export const waitFor = async (predicate: () => boolean, timeoutMs = 5000, label = 'condition'): Promise<void> => {
   const start = Date.now()

@@ -211,34 +211,60 @@ describe('server integration (real WebSocket)', () => {
     }
   })
 
-  it('refuses awareness updates that impersonate another client', async () => {
-    harness = await startServer()
-    const roomId = newRoomId()
-    const honest = track(connect(`r/${roomId}`))
-    const other = track(connect(`r/${roomId}`))
-    await Promise.all([synced(honest), synced(other)])
-    honest.awareness.setLocalStateField('user', { name: 'Honest' })
-    await waitFor(() => other.awareness.getStates().has(honest.doc.clientID), 5000, 'honest awareness')
-
-    // Forge an awareness update for the honest client's id from a raw socket.
+  /** Raw socket that sends one awareness update for `clientId` with the given name. */
+  const forgeAwareness = async (roomId: string, clientId: number, name: string, clock: number, ip: string) => {
     const { encodeAwarenessUpdate, Awareness } = await import('y-protocols/awareness')
-    const forgedDoc = new Y.Doc()
-    forgedDoc.clientID = honest.doc.clientID
-    const forged = new Awareness(forgedDoc)
-    forged.setLocalState({ user: { name: 'Mallory' } })
-    const meta = forged.meta.get(forgedDoc.clientID)
-    if (meta) meta.clock = 1000
     const encoding = await import('lib0/encoding')
+    const doc = new Y.Doc()
+    doc.clientID = clientId
+    const awareness = new Awareness(doc)
+    awareness.setLocalState({ user: { name } })
+    const meta = awareness.meta.get(clientId)
+    if (meta) meta.clock = clock
     const encoder = encoding.createEncoder()
     encoding.writeVarUint(encoder, 1)
-    encoding.writeVarUint8Array(encoder, encodeAwarenessUpdate(forged, [forgedDoc.clientID]))
-    const raw = rawSocket(`/r/${roomId}`)
+    encoding.writeVarUint8Array(encoder, encodeAwarenessUpdate(awareness, [clientId]))
+    const raw = rawSocket(`/r/${roomId}`, { 'x-forwarded-for': ip })
     await raw.opened
     raw.ws.send(encoding.toUint8Array(encoder))
+    awareness.destroy()
+    return raw
+  }
+
+  const nameOf = (provider: WebsocketProvider, clientId: number) =>
+    (provider.awareness.getStates().get(clientId) as { user?: { name: string } } | undefined)?.user?.name
+
+  it('refuses awareness updates that impersonate a client from another address', async () => {
+    harness = await startServer({ trustProxy: true })
+    const roomId = newRoomId()
+    const honest = track(connect(`r/${roomId}`, new Y.Doc(), '203.0.113.10'))
+    const other = track(connect(`r/${roomId}`, new Y.Doc(), '203.0.113.20'))
+    await Promise.all([synced(honest), synced(other)])
+    honest.awareness.setLocalStateField('user', { name: 'Honest' })
+    await waitFor(() => nameOf(other, honest.doc.clientID) === 'Honest', 5000, 'honest awareness')
+
+    const raw = await forgeAwareness(roomId, honest.doc.clientID, 'Mallory', 1000, '198.51.100.66')
     await delay(200)
-    const seen = other.awareness.getStates().get(honest.doc.clientID) as { user: { name: string } }
-    expect(seen.user.name).toBe('Honest')
+    expect(nameOf(other, honest.doc.clientID)).toBe('Honest')
     raw.ws.close()
-    forged.destroy()
+  })
+
+  it('lets a reconnecting client take over its presence from its own stale socket', async () => {
+    harness = await startServer({ trustProxy: true })
+    const roomId = newRoomId()
+    const observer = track(connect(`r/${roomId}`, new Y.Doc(), '203.0.113.20'))
+    await synced(observer)
+    const clientId = 424242
+    const stale = await forgeAwareness(roomId, clientId, 'Ayşe', 1, '203.0.113.10')
+    await waitFor(() => nameOf(observer, clientId) === 'Ayşe', 5000, 'first socket presence')
+    // Same client, new socket (e.g. after a network drop), before the old one is closed.
+    const fresh = await forgeAwareness(roomId, clientId, 'Ayşe (yeniden)', 2, '203.0.113.10')
+    await waitFor(() => nameOf(observer, clientId) === 'Ayşe (yeniden)', 5000, 'takeover')
+    // The stale socket finally closes: it must not remove the reconnected client's presence.
+    stale.ws.close()
+    await stale.closed
+    await delay(200)
+    expect(nameOf(observer, clientId)).toBe('Ayşe (yeniden)')
+    fresh.ws.close()
   })
 })

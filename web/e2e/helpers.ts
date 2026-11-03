@@ -21,6 +21,7 @@ type PanoHandle = {
   undoDepth: () => number
   camera: () => { x: number; y: number; zoom: number }
   setCamera: (cam: { x: number; y: number; zoom: number }) => void
+  corners: (id: string) => { x: number; y: number }[] | null
 }
 
 declare global {

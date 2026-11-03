@@ -1,3 +1,5 @@
+import { isSafeImageUrl } from '../lib/export'
+
 /** Source files above this size are rejected before decoding. */
 export const MAX_IMAGE_SOURCE_BYTES = 8 * 1024 * 1024
 /** Encoded size budget per image stored in the document. */
@@ -71,7 +73,7 @@ export class ImageCache {
   constructor(private readonly onLoad: () => void) {}
 
   get(id: string, src: string | undefined): HTMLImageElement | null {
-    if (!src) return null
+    if (!src || !isSafeImageUrl(src)) return null
     const entry = this.images.get(id)
     if (entry && entry.src === src) return entry.ready ? entry.img : null
     const img = new Image()

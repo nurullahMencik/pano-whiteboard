@@ -208,13 +208,21 @@ export class Room {
     return null
   }
 
-  /** A connection may only speak for client ids that no other connection owns. */
+  /**
+   * A connection may only speak for client ids that no other connection owns.
+   * Exception: a client reconnecting from the same IP takes its id over from
+   * its own stale socket (which may linger until the heartbeat notices), so
+   * presence survives network drops and the stale socket's close cannot wipe it.
+   */
   private claimClientId(conn: Connection, clientId: number): boolean {
     if (conn.controlledIds.has(clientId)) return true
-    for (const other of this.conns.values()) {
-      if (other !== conn && other.controlledIds.has(clientId)) return false
-    }
     if (conn.controlledIds.size >= MAX_CLIENT_IDS_PER_CONNECTION) return false
+    for (const other of this.conns.values()) {
+      if (other === conn || !other.controlledIds.has(clientId)) continue
+      if (other.ip !== conn.ip) return false
+      other.controlledIds.delete(clientId)
+      this.log.info('awareness.takeover', { from: other.id, to: conn.id })
+    }
     conn.controlledIds.add(clientId)
     return true
   }
