@@ -121,7 +121,7 @@ export default function Home() {
                 <span className="h-2.5 w-2.5 rounded-full bg-[#51cf66]" aria-hidden />
                 <span className="ml-2 truncate text-xs font-semibold text-muted">{t('demo.title')}</span>
                 <span className="ml-auto flex -space-x-1.5" aria-hidden>
-                  {['#e8590c', '#1c7ed6', '#2f9e44'].map((color, i) => (
+                  {['#c2410c', '#1971c2', '#237032'].map((color, i) => (
                     <span key={color} className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-panel-solid text-[10px] font-bold text-white" style={{ background: color }}>
                       {['N', 'E', 'M'][i]}
                     </span>
@@ -133,9 +133,9 @@ export default function Home() {
                 style={{ backgroundImage: 'radial-gradient(var(--line-strong) 1px, transparent 1px)', backgroundSize: '18px 18px' }}
               >
                 <BoardPreview content={demo} theme={theme} label={t('home.demoCaption')} className="absolute inset-0 p-3" />
-                <FakeCursor name="Elif" color="#1c7ed6" className="left-[46%] top-[30%]" />
-                <FakeCursor name="Mert" color="#2f9e44" className="left-[78%] top-[62%]" />
-                <FakeCursor name="Nurullah" color="#e8590c" className="left-[60%] top-[80%]" />
+                <FakeCursor name="Elif" color="#1971c2" className="left-[46%] top-[30%]" />
+                <FakeCursor name="Mert" color="#237032" className="left-[78%] top-[62%]" />
+                <FakeCursor name="Nurullah" color="#c2410c" className="left-[60%] top-[80%]" />
               </div>
               <figcaption className="sr-only">{t('home.demoCaption')}</figcaption>
             </figure>

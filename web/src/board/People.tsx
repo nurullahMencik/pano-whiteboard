@@ -77,11 +77,14 @@ export const People = () => {
           className="flex h-9 items-center rounded-xl px-1.5 hover:bg-accent-soft"
         >
           <span className="flex -space-x-2">
-            {shown.map((peer) => (
-              <Avatar key={peer.clientId} peer={peer} />
+            {shown.map((peer, i) => (
+              <span key={peer.clientId} className={cx(i >= 2 && 'max-sm:hidden')}>
+                <Avatar peer={peer} />
+              </span>
             ))}
           </span>
-          {peers.length > shown.length && <span className="ml-1.5 text-xs font-semibold text-muted">+{peers.length - shown.length}</span>}
+          {peers.length > shown.length && <span className="ml-1.5 text-xs font-semibold text-muted max-sm:hidden">+{peers.length - shown.length}</span>}
+          {peers.length > 2 && <span className="ml-1 text-xs font-semibold text-muted sm:hidden">+{peers.length - 2}</span>}
           {peers.length === 0 && <Users size={18} aria-hidden />}
         </button>
       </Panel>

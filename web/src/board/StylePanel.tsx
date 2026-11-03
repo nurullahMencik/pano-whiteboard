@@ -2,7 +2,7 @@ import { ArrowDownToLine, ArrowUpToLine, ChevronDown, ChevronUp, CopyPlus, Lock,
 import type { ReactNode } from 'react'
 import { IconButton, Panel, Segmented } from '../components/ui'
 import { cx } from '../components/cx'
-import { FILL_SWATCHES, INK, NONE, STICKY_SWATCHES, STROKE_SWATCHES, THEME, type Swatch } from '../lib/colors'
+import { FILL_SWATCHES, NONE, STICKY_SWATCHES, STROKE_SWATCHES, resolveColor, type Swatch } from '../lib/colors'
 import type { ElementType, Tool } from '../lib/types'
 import { useUi, type ToolStyle } from '../store/ui'
 import { useBoard } from './context'
@@ -46,7 +46,7 @@ const Swatches = ({
       {swatches.map((swatch) => {
         const name = t(`color.${swatch.name}`)
         const accessible = swatch.light ? t('style.light', { color: name }) : name
-        const color = swatch.value === INK ? THEME[theme].ink : swatch.value
+        const color = resolveColor(swatch.value, theme)
         return (
           <button
             key={swatch.value}

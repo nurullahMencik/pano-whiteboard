@@ -2,7 +2,7 @@ import { THEME, contrastText, resolveColor, type ThemeName } from './colors'
 import { boxCenter, frameOf, localPoints, pointsBounds } from './geometry'
 import { freedrawPath } from './stroke'
 import { FONT_FAMILY, layoutElementText } from './text'
-import type { ElementData, Vec } from './types'
+import type { Box, ElementData, Vec } from './types'
 
 export interface RenderOptions {
   theme: ThemeName
@@ -69,10 +69,21 @@ const applyStroke = (ctx: CanvasRenderingContext2D, el: ElementData, theme: Them
   ctx.setLineDash(el.strokeStyle === 'dashed' ? [el.strokeWidth * 3, el.strokeWidth * 2.5] : [])
 }
 
-const drawText = (ctx: CanvasRenderingContext2D, el: ElementData, color: string) => {
+const drawText = (ctx: CanvasRenderingContext2D, el: ElementData, color: string, zoom: number) => {
   const layout = layoutElementText(el)
   if (!layout) return
   ctx.fillStyle = color
+  // Level of detail: text smaller than ~4 device pixels is drawn as "greeked" bars.
+  if (layout.fontSize * zoom < 4) {
+    ctx.globalAlpha *= 0.45
+    layout.lines.forEach((line, i) => {
+      if (line.trim() === '') return
+      const width = Math.min(layout.maxWidth, line.length * layout.fontSize * 0.5)
+      const x = layout.align === 'center' ? layout.x + (layout.maxWidth - width) / 2 : layout.x
+      ctx.fillRect(x, layout.y + layout.lineHeight * i + layout.lineHeight * 0.3, width, layout.fontSize * 0.45)
+    })
+    return
+  }
   ctx.font = `500 ${layout.fontSize}px ${FONT_FAMILY}`
   ctx.textBaseline = 'middle'
   ctx.textAlign = layout.align === 'center' ? 'center' : 'left'
@@ -80,6 +91,41 @@ const drawText = (ctx: CanvasRenderingContext2D, el: ElementData, color: string)
   layout.lines.forEach((line, i) => {
     ctx.fillText(line, x, layout.y + layout.lineHeight * (i + 0.5))
   })
+}
+
+/**
+ * Fast path for elements that cover only a few device pixels (far zoomed out):
+ * one axis-aligned rectangle in the element's dominant colour, no transforms,
+ * paths or text. Keeps very large boards responsive when everything is visible.
+ */
+export const drawElementTiny = (ctx: CanvasRenderingContext2D, el: ElementData, bounds: Box, theme: ThemeName) => {
+  let color: string
+  let alpha = 1
+  switch (el.type) {
+    case 'sticky':
+      color = el.fill === 'none' ? '#ffe066' : el.fill
+      break
+    case 'rect':
+    case 'ellipse':
+    case 'diamond':
+      color = el.fill !== 'none' ? resolveColor(el.fill, theme) : resolveColor(el.stroke, theme)
+      alpha = el.fill !== 'none' ? 1 : 0.35
+      break
+    case 'image':
+      color = theme === 'dark' ? '#3a3f4d' : '#d9d7d0'
+      break
+    case 'text':
+      color = resolveColor(el.stroke, theme)
+      alpha = 0.35
+      break
+    default:
+      color = resolveColor(el.stroke, theme)
+      alpha = 0.55
+  }
+  ctx.globalAlpha = alpha * el.opacity
+  ctx.fillStyle = color
+  ctx.fillRect(bounds.x, bounds.y, bounds.w, bounds.h)
+  ctx.globalAlpha = 1
 }
 
 /** Draws one element in world space (the caller sets up the camera transform). */
@@ -118,7 +164,7 @@ export const drawElement = (ctx: CanvasRenderingContext2D, el: ElementData, opti
         applyStroke(ctx, el, theme)
         ctx.stroke()
       }
-      if (showText) drawText(ctx, el, labelColor(el, theme))
+      if (showText) drawText(ctx, el, labelColor(el, theme), options.zoom)
       break
     }
     case 'line':
@@ -146,19 +192,23 @@ export const drawElement = (ctx: CanvasRenderingContext2D, el: ElementData, opti
     }
     case 'freedraw': {
       ctx.fillStyle = ink
-      ctx.fill(freedrawPath2D(el))
+      if (Math.max(w, h) * options.zoom < 3) ctx.fillRect(0, 0, Math.max(w, 1), Math.max(h, 1))
+      else ctx.fill(freedrawPath2D(el))
       break
     }
     case 'text': {
-      if (showText) drawText(ctx, el, ink)
+      if (showText) drawText(ctx, el, ink, options.zoom)
       break
     }
     case 'sticky': {
       const color = el.fill === 'none' ? '#ffe066' : el.fill
       ctx.save()
-      ctx.shadowColor = THEME[theme].stickyShadow
-      ctx.shadowBlur = 14 * options.zoom
-      ctx.shadowOffsetY = 4 * options.zoom
+      // Blurred shadows are costly; skip them when the note is small on screen.
+      if (w * options.zoom > 48) {
+        ctx.shadowColor = THEME[theme].stickyShadow
+        ctx.shadowBlur = 14 * options.zoom
+        ctx.shadowOffsetY = 4 * options.zoom
+      }
       roundRectPath(ctx, w, h, shapeRadius(el))
       ctx.fillStyle = color
       ctx.fill()
@@ -173,7 +223,7 @@ export const drawElement = (ctx: CanvasRenderingContext2D, el: ElementData, opti
       ctx.closePath()
       ctx.fillStyle = 'rgba(0,0,0,0.08)'
       ctx.fill()
-      if (showText) drawText(ctx, el, THEME[theme].stickyText)
+      if (showText) drawText(ctx, el, THEME[theme].stickyText, options.zoom)
       break
     }
     case 'image': {

@@ -41,7 +41,7 @@ test('server unreachable: waking notice, local drawing survives a reload and syn
   let serverAwake = false
   await ayse.context.routeWebSocket(/:5312\//, (ws) => {
     if (serverAwake) ws.connectToServer()
-    else ws.close({ code: 1006 })
+    else void ws.close({ code: 1011, reason: 'asleep' })
   })
   await ayse.context.route(/:5312\/health/, (route) => (serverAwake ? route.continue() : route.abort('connectionrefused')))
   const path = await createBoard(ayse.page)

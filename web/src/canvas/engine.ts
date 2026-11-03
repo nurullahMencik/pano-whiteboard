@@ -35,7 +35,7 @@ import {
   zoomAt,
 } from '../lib/geometry'
 import { cloneInput, compareElements, readElement, type ElementPatch, type YElement } from '../lib/model'
-import { drawElement } from '../lib/render'
+import { drawElement, drawElementTiny } from '../lib/render'
 import { round, simplifyPoints, simulatedPressure, streamline, toFlat, toStrokePoints, type StrokePoint } from '../lib/stroke'
 import { textBlockSize } from '../lib/text'
 import type { Box, Camera, ElementData, ElementInput, Handle, Peer, PresenceState, Tool, Vec } from '../lib/types'
@@ -138,6 +138,7 @@ export class BoardEngine {
   private peersKey = ''
   private autoFit = true
   private autoFitTimer: ReturnType<typeof setTimeout> | null = null
+  private autoFitStop: ReturnType<typeof setTimeout> | null = null
   private lastCursorSent = 0
   private viewportTimer: ReturnType<typeof setTimeout> | null = null
   private hoverWorld: Vec | null = null
@@ -219,6 +220,16 @@ export class BoardEngine {
       }
     })
     this.cleanups.push(unsubscribe)
+
+    // Fit the content while the board is loading; stop shortly after the first
+    // server sync so later remote edits never move a passive viewer's camera.
+    const offConnection = this.session.onConnection((info) => {
+      if (info.everSynced && this.autoFit && !this.autoFitStop) {
+        this.scheduleAutoFit()
+        this.autoFitStop = setTimeout(() => this.claimCamera(), 500)
+      }
+    })
+    this.cleanups.push(offConnection)
 
     this.resize()
     this.publishCount()
@@ -543,10 +554,13 @@ export class BoardEngine {
       editingId: this.editingId,
       fadedIds: this.erasing,
     }
+    // Elements smaller than this (in device pixels) use the flat fast path.
+    const tiny = 10 / (camera.zoom * dpr)
     for (const el of this.sortedElements()) {
       const b = this.bounds.get(el.id)
       if (b && !boxesIntersect(b, padded)) continue
-      drawElement(ctx, el, options)
+      if (b && b.w < tiny && b.h < tiny && el.id !== this.editingId && !this.erasing.has(el.id)) drawElementTiny(ctx, el, b, this.theme)
+      else drawElement(ctx, el, options)
     }
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -1741,6 +1755,7 @@ export class BoardEngine {
     this.editor?.commit()
     if (this.rafId) cancelAnimationFrame(this.rafId)
     if (this.autoFitTimer) clearTimeout(this.autoFitTimer)
+    if (this.autoFitStop) clearTimeout(this.autoFitStop)
     if (this.viewportTimer) clearTimeout(this.viewportTimer)
     for (const cleanup of this.cleanups.splice(0)) cleanup()
     this.cursors.destroy()

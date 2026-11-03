@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+.git
+.github
+docs
+web/src
+web/e2e
+web/test
+web/public
+server/data
+server/test
+**/*.db
+**/test-results
+**/playwright-report

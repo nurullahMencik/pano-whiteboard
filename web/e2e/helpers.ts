@@ -20,6 +20,7 @@ type PanoHandle = {
   peers: () => { name: string; isSelf: boolean }[]
   undoDepth: () => number
   camera: () => { x: number; y: number; zoom: number }
+  setCamera: (cam: { x: number; y: number; zoom: number }) => void
 }
 
 declare global {

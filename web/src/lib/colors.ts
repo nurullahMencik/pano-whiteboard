@@ -51,8 +51,8 @@ export const STICKY_SWATCHES: Swatch[] = [
 
 export const STICKY_COLORS = STICKY_SWATCHES.map((s) => s.value)
 
-/** Presence colours: saturated, distinct, readable with white text. */
-export const USER_COLORS = ['#e8590c', '#1c7ed6', '#2f9e44', '#c2255c', '#7048e8', '#0c8599', '#d9480f', '#5c940d'] as const
+/** Presence colours: distinct and all ≥ 4.5:1 against white label text (WCAG AA). */
+export const USER_COLORS = ['#c2410c', '#1971c2', '#237032', '#a61e4d', '#6741d9', '#0b7285', '#862e9c', '#b35c00'] as const
 
 export const THEME = {
   light: {
@@ -77,8 +77,27 @@ export const THEME = {
   },
 } as const
 
+/**
+ * Pastel fills are stored once; in dark mode they are drawn as deep, muted
+ * tints of the same hue so labels and nearby ink stay readable. Sticky notes
+ * keep their paper colours on purpose.
+ */
+const DARK_FILLS: Record<string, string> = {
+  '#ffe3e3': '#4a2528',
+  '#ffe8cc': '#4a3220',
+  '#fff3bf': '#45401f',
+  '#d3f9d8': '#1f4229',
+  '#d0ebff': '#1d3550',
+  '#e5dbff': '#33295a',
+  '#f1f3f5': '#2c3039',
+  '#e6f6e9': '#1c2b22',
+  '#fff0e1': '#30251b',
+  '#e3f0fd': '#1b2636',
+}
+
 export const resolveColor = (color: string, theme: ThemeName): string => {
   if (color === INK) return THEME[theme].ink
+  if (theme === 'dark') return DARK_FILLS[color] ?? color
   return color
 }
 

@@ -16,3 +16,4 @@ server/data/
 .lighthouse/
 .DS_Store
 npm-debug.log*
+docs/.video/

@@ -1,0 +1,26 @@
+# Example Render Blueprint for the realtime server (free plan, Docker).
+# The production service may be declared in another Blueprint; keep this file
+# as a reference. No secrets are required.
+services:
+  - type: web
+    name: pano-server
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      # Render terminates TLS in a proxy; use X-Forwarded-For for per-IP limits.
+      - key: TRUST_PROXY
+        value: "true"
+      # Only the GitHub Pages front end may open WebSocket connections.
+      - key: ALLOWED_ORIGINS
+        value: https://nurullahmencik.github.io
+      - key: LOG_LEVEL
+        value: info
+      # The free plan has no persistent disk: rooms live in /data until the
+      # instance restarts; clients re-seed rooms from their IndexedDB copy.
+      - key: DB_PATH
+        value: /data/pano.db
